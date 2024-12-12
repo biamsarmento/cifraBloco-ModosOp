@@ -18,6 +18,10 @@ S_BOX = [
     [0x8C, 0xA1, 0x89, 0x0D, 0xBF, 0xE6, 0x42, 0x68, 0x41, 0x99, 0x2D, 0x0F, 0xB0, 0x54, 0xBB, 0x16]
 ]
 
+def format_state_hex(text):
+    """Formata o estado como uma matriz 4x4 de valores hexadecimais."""
+    return ' '.join(' '.join(f"{byte:02x}" for byte in row) for row in text)
+
 def pad_pkcs7(text):
     """Aplica padding PKCS#7 para completar 16 bytes."""
     padding_len = 16 - len(text)
@@ -46,9 +50,8 @@ def add_round_key(state, round_key):
     for i in range(4):
         for j in range(4):
             temp[i][j] ^= round_key[i][j]
-    
-    return temp
 
+    return temp
 
 def sub_bytes(state):
     """Aplica substituição de bytes usando a S-Box."""
@@ -169,16 +172,10 @@ def key_expansion(key):
 
 def aes_encrypt(text, key):
     # Aplicar padding
-    text_padding = pad_pkcs7(text)
-    state = text_to_state(text_padding)
-    # state = [
-    #     [0, 17, 34, 51], 
-    #     [68, 85, 102, 119], 
-    #     [136, 153, 170, 187], 
-    #     [204, 221, 238, 255]
-    # ]
+    # text_padding = pad_pkcs7(text)
+    # state = text_to_state(text_padding)
 
-    # state = text
+    state = text
 
     firstAddRoundKey = 0
     afterSubBytes = 0
@@ -189,37 +186,37 @@ def aes_encrypt(text, key):
     round_keys = key_expansion(key)  # Corrige o formato das subchaves
     # Testando se a saída corresponde ao esperado
     for i, rk in enumerate(round_keys):
-        print(f"Round Key {i}:", rk)
+        print(f"Round Key {i}:", format_state_hex(rk))
 
     # print("RoundKeys: ", round_keys)
 
     # Rodada inicial
-    print("State inicial:", state)
+    print("State inicial:", format_state_hex(state))
     firstAddRoundKey = add_round_key(state, round_keys[0])
     # print("State 0 ", state)
 
     # 9 rodadas intermediárias
     for i in range(1, 10):
-        print(f"round[{i}].start: {firstAddRoundKey}")
+        print(f"round[{i}].start: {format_state_hex(firstAddRoundKey)}")
         afterSubBytes = sub_bytes(firstAddRoundKey)
-        print(f"round[{i}].sub_bytes: {afterSubBytes}")
+        print(f"round[{i}].sub_bytes: {format_state_hex(afterSubBytes)}")
         afterShiftRows = shift_rows(afterSubBytes)
-        print(f"round[{i}].shift_rows: {afterShiftRows}")
+        print(f"round[{i}].shift_rows: {format_state_hex(afterShiftRows)}")
         afterMixColumns = mix_columns(afterShiftRows)
-        print(f"round[{i}].mix_columns: {afterMixColumns}")
+        print(f"round[{i}].mix_columns: {format_state_hex(afterMixColumns)}")
         afterAddRoundKey = add_round_key(afterMixColumns, round_keys[i])
-        print(f"round[{i}].add_round_keys: {afterAddRoundKey}")
+        print(f"round[{i}].add_round_keys: {format_state_hex(afterAddRoundKey)}")
         # print(f"State {i}", state)
 
     # Última rodada
-    print(f"round[{10}].start: {afterAddRoundKey}")
+    print(f"round[{10}].start: {format_state_hex(afterAddRoundKey)}")
     afterSubBytes = sub_bytes(afterAddRoundKey)
-    print(f"round[{10}].sub_bytes: {afterSubBytes}")
+    print(f"round[{10}].sub_bytes: {format_state_hex(afterSubBytes)}")
     afterShiftRows = shift_rows(afterSubBytes)
-    print(f"round[{10}].shift_rows: {afterShiftRows}")
+    print(f"round[{10}].shift_rows: {format_state_hex(afterShiftRows)}")
     afterAddRoundKey = add_round_key(afterShiftRows, round_keys[10])
-    print(f"round[{10}].add_round_keys: {afterAddRoundKey}")
-    print("State 10 ", afterAddRoundKey)
+    print(f"round[{10}].add_round_keys: {format_state_hex(afterAddRoundKey)}")
+    print("State 10 ", format_state_hex(afterAddRoundKey))
 
     return state
 
@@ -253,14 +250,14 @@ def main():
         0x0c, 0x0d, 0x0e, 0x0f
     ])
 
-    encrypted_state = aes_encrypt(text, key)
+    # encrypted_state = aes_encrypt(text, key)
 
-    # encrypted_state = aes_encrypt([
-    #     [0x00, 0x11, 0x22, 0x33], 
-    #     [0x44, 0x55, 0x66, 0x77], 
-    #     [0x88, 0x99, 0xAA, 0xBB], 
-    #     [0xCC, 0xDD, 0xEE, 0xFF]
-    # ], key)
+    encrypted_state = aes_encrypt([
+        [0x00, 0x11, 0x22, 0x33], 
+        [0x44, 0x55, 0x66, 0x77], 
+        [0x88, 0x99, 0xAA, 0xBB], 
+        [0xCC, 0xDD, 0xEE, 0xFF]
+    ], key)
 
     print_state(encrypted_state, "Texto Cifrado")
 
