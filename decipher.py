@@ -94,32 +94,67 @@ def inv_shift_rows(state):
 
     return temp
 
+
 # O erro está em mix_columns!
+
+# # Função de InvMixColumns
+# def inv_mix_columns(state): 
+#     temp = state
+#     print("STATE:", state)
+#     # Matriz de transformação inversa para InvMixColumns
+#     inv_mix_matrix = [
+#         [0x0e, 0x0b, 0x0d, 0x09],
+#         [0x09, 0x0e, 0x0b, 0x0d],
+#         [0x0d, 0x09, 0x0e, 0x0b],
+#         [0x0b, 0x0d, 0x09, 0x0e]
+#     ]
+    
+#     # Matriz temporária para armazenar o resultado
+#     temp_state = [[0] * 4 for _ in range(4)]
+    
+#     # Multiplica e aplica o XOR para cada coluna usando a matriz inversa
+#     for i in range(4):
+#         for j in range(4):
+#             temp_state[i][j] = 0
+#             for k in range(4):
+#                 if inv_mix_matrix[j][k] == 0x09:
+#                     temp_state[i][j] ^= mul09(temp[i][k])
+#                 elif inv_mix_matrix[j][k] == 0x0b:
+#                     temp_state[i][j] ^= mul0b(temp[i][k])
+#                 elif inv_mix_matrix[j][k] == 0x0d:
+#                     temp_state[i][j] ^= mul0d(temp[i][k])
+#                 elif inv_mix_matrix[j][k] == 0x0e:
+#                     temp_state[i][j] ^= mul0e(temp[i][k])
+    
+#     # Atualiza o estado com o resultado da operação de InvMixColumns
+#     for i in range(4):
+#         for j in range(4):
+#             temp[i][j] = temp_state[i][j]
+    
+#     return temp
 
 # Função para multiplicação por 2 em GF(2^8)
 def xtime(x):
     return ((x << 1) & 0xFF) ^ (0x1B if (x & 0x80) else 0)
 
-# Função para multiplicação por 0x0e em GF(2^8)
+# Funções para multiplicações específicas em GF(2^8)
 def mul0e(x):
-    return xtime(xtime(xtime(x))) ^ x
+    return xtime(xtime(xtime(x))) ^ xtime(xtime(x)) ^ xtime(x)
 
-# Função para multiplicação por 0x0b em GF(2^8)
 def mul0b(x):
     return xtime(xtime(xtime(x))) ^ xtime(x) ^ x
 
-# Função para multiplicação por 0x0d em GF(2^8)
 def mul0d(x):
     return xtime(xtime(xtime(x))) ^ xtime(xtime(x)) ^ x
 
-# Função para multiplicação por 0x09 em GF(2^8)
 def mul09(x):
-    return xtime(xtime(xtime(x))) ^ xtime(x)
+    return xtime(xtime(xtime(x))) ^ x
 
+# Função InvMixColumns
 # Função de InvMixColumns
-def inv_mix_columns(state): 
+def inv_mix_columns(state):
     temp = state
-    # Matriz de transformação inversa para InvMixColumns
+    # Matriz inversa de transformação para InvMixColumns
     inv_mix_matrix = [
         [0x0e, 0x0b, 0x0d, 0x09],
         [0x09, 0x0e, 0x0b, 0x0d],
@@ -131,18 +166,18 @@ def inv_mix_columns(state):
     temp_state = [[0] * 4 for _ in range(4)]
     
     # Multiplica e aplica o XOR para cada coluna usando a matriz inversa
-    for i in range(4):
-        for j in range(4):
-            temp_state[i][j] = 0
+    for col in range(4):
+        for row in range(4):
+            temp_state[row][col] = 0
             for k in range(4):
-                if inv_mix_matrix[j][k] == 0x09:
-                    temp_state[i][j] ^= mul09(temp[i][k])
-                elif inv_mix_matrix[j][k] == 0x0b:
-                    temp_state[i][j] ^= mul0b(temp[i][k])
-                elif inv_mix_matrix[j][k] == 0x0d:
-                    temp_state[i][j] ^= mul0d(temp[i][k])
-                elif inv_mix_matrix[j][k] == 0x0e:
-                    temp_state[i][j] ^= mul0e(temp[i][k])
+                if inv_mix_matrix[row][k] == 0x09:
+                    temp_state[row][col] ^= mul09(temp[k][col])
+                elif inv_mix_matrix[row][k] == 0x0b:
+                    temp_state[row][col] ^= mul0b(temp[k][col])
+                elif inv_mix_matrix[row][k] == 0x0d:
+                    temp_state[row][col] ^= mul0d(temp[k][col])
+                elif inv_mix_matrix[row][k] == 0x0e:
+                    temp_state[row][col] ^= mul0e(temp[k][col])
     
     # Atualiza o estado com o resultado da operação de InvMixColumns
     for i in range(4):
@@ -151,7 +186,13 @@ def inv_mix_columns(state):
     
     return temp
 
-# Está Correto
+# Reformatar entrada e saída
+def format_input_output(input_bytes, to_columns=True):
+    if to_columns:  # Converter bytes em formato col-major para matriz 4x4
+        return [[input_bytes[i + 4 * j] for i in range(4)] for j in range(4)]
+    else:  # Converter matriz 4x4 de volta para formato col-major
+        return [input_bytes[row][col] for col in range(4) for row in range(4)]
+
 
 def inv_key_expansion(key):
     """Expande a chave para 11 rodadas (AES-128)."""
