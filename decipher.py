@@ -94,101 +94,6 @@ def inv_shift_rows(state):
 
     return temp
 
-
-# O erro está em mix_columns!
-
-# # Função de InvMixColumns
-# def inv_mix_columns(state): 
-#     temp = state
-#     print("STATE:", state)
-#     # Matriz de transformação inversa para InvMixColumns
-#     inv_mix_matrix = [
-#         [0x0e, 0x0b, 0x0d, 0x09],
-#         [0x09, 0x0e, 0x0b, 0x0d],
-#         [0x0d, 0x09, 0x0e, 0x0b],
-#         [0x0b, 0x0d, 0x09, 0x0e]
-#     ]
-    
-#     # Matriz temporária para armazenar o resultado
-#     temp_state = [[0] * 4 for _ in range(4)]
-    
-#     # Multiplica e aplica o XOR para cada coluna usando a matriz inversa
-#     for i in range(4):
-#         for j in range(4):
-#             temp_state[i][j] = 0
-#             for k in range(4):
-#                 if inv_mix_matrix[j][k] == 0x09:
-#                     temp_state[i][j] ^= mul09(temp[i][k])
-#                 elif inv_mix_matrix[j][k] == 0x0b:
-#                     temp_state[i][j] ^= mul0b(temp[i][k])
-#                 elif inv_mix_matrix[j][k] == 0x0d:
-#                     temp_state[i][j] ^= mul0d(temp[i][k])
-#                 elif inv_mix_matrix[j][k] == 0x0e:
-#                     temp_state[i][j] ^= mul0e(temp[i][k])
-    
-#     # Atualiza o estado com o resultado da operação de InvMixColumns
-#     for i in range(4):
-#         for j in range(4):
-#             temp[i][j] = temp_state[i][j]
-    
-#     return temp
-
-# # Função para multiplicação por 2 em GF(2^8)
-# def xtime(x):
-#     return ((x << 1) & 0xFF) ^ (0x1B if (x & 0x80) else 0)
-
-# # Funções para multiplicações específicas em GF(2^8)
-# def mul0e(x):
-#     return xtime(xtime(xtime(x))) ^ xtime(xtime(x)) ^ xtime(x)
-
-# def mul0b(x):
-#     return xtime(xtime(xtime(x))) ^ xtime(x) ^ x
-
-# def mul0d(x):
-#     return xtime(xtime(xtime(x))) ^ xtime(xtime(x)) ^ x
-
-# def mul09(x):
-#     return xtime(xtime(xtime(x))) ^ x
-
-# # Função InvMixColumns
-# # Função de InvMixColumns
-# def inv_mix_columns(state):
-#     print("Entry Mix Columns: ", state)
-#     print("Entry Mix Columns: ", format_state_hex(state))
-
-#     temp = state
-#     # Matriz inversa de transformação para InvMixColumns
-#     inv_mix_matrix = [
-#         [0x0e, 0x0b, 0x0d, 0x09],
-#         [0x09, 0x0e, 0x0b, 0x0d],
-#         [0x0d, 0x09, 0x0e, 0x0b],
-#         [0x0b, 0x0d, 0x09, 0x0e]
-#     ]
-    
-#     # Matriz temporária para armazenar o resultado
-#     temp_state = [[0] * 4 for _ in range(4)]
-    
-#     # Multiplica e aplica o XOR para cada coluna usando a matriz inversa
-#     for col in range(4):
-#         for row in range(4):
-#             temp_state[row][col] = 0
-#             for k in range(4):
-#                 if inv_mix_matrix[row][k] == 0x09:
-#                     temp_state[row][col] ^= mul09(temp[k][col])
-#                 elif inv_mix_matrix[row][k] == 0x0b:
-#                     temp_state[row][col] ^= mul0b(temp[k][col])
-#                 elif inv_mix_matrix[row][k] == 0x0d:
-#                     temp_state[row][col] ^= mul0d(temp[k][col])
-#                 elif inv_mix_matrix[row][k] == 0x0e:
-#                     temp_state[row][col] ^= mul0e(temp[k][col])
-    
-#     # Atualiza o estado com o resultado da operação de InvMixColumns
-#     for i in range(4):
-#         for j in range(4):
-#             temp[i][j] = temp_state[i][j]
-    
-#     return temp
-
 # Função para transpor a matriz (linhas <-> colunas)
 def transpose(matrix):
     """
@@ -218,7 +123,7 @@ INV_MIX_COLUMNS_MATRIX = [
     [0x0B, 0x0D, 0x09, 0x0E],
 ]
 
-# Função InvMixColumns corrigida
+# Função InvMixColumns 
 def inv_mix_columns(state):
     """
     Aplica a operação InvMixColumns em uma matriz state (4x4) organizada por colunas.
@@ -234,24 +139,14 @@ def inv_mix_columns(state):
 
 # Função principal que organiza a entrada, aplica InvMixColumns e reorganiza a saída
 def process_inv_mix_columns(input_state):
-    """
-    - Transpõe a entrada (linhas -> colunas).
-    - Aplica InvMixColumns.
-    - Transpõe a saída (colunas -> linhas).
-    """
-    print("Entrada original:")
-
     # Transpõe a matriz de linhas para colunas
     transposed_input = transpose(input_state)
-    print("Matriz transposta (para colunas):")
 
     # Aplica InvMixColumns
     result = inv_mix_columns(transposed_input)
-    print("Matriz após InvMixColumns:")
 
     # Transpõe a matriz de volta para o formato original (colunas -> linhas)
     final_result = transpose(result)
-    print("Matriz final transposta (de volta para linhas):")
 
     return final_result
 
@@ -302,43 +197,6 @@ def inv_key_expansion(key):
 
     # Retorna as chaves na ordem inversa
     return expanded_keys[::-1]
-
-def text_to_state(text):
-    """Converte um texto para uma matriz 4x4 (estado) do AES."""
-    state = [[0 for _ in range(4)] for _ in range(4)]
-    for i in range(len(text)):
-        row = i % 4
-        col = i // 4
-        state[row][col] = ord(text[i])
-    return state
-
-# def aes_decrypt(ciphertext, key):
-#     """Descriptografa o texto cifrado usando a chave fornecida."""
-#     # state = text_to_state(ciphertext)
-#     round_keys = inv_key_expansion(key)
-
-#     for i, rk in enumerate(round_keys):
-#         print(f"Round Key {i}:", rk)
-
-#     state = ciphertext
-    
-#     # 10 rounds de descriptografia
-#     print("State 0: ", state)
-#     state = inv_add_round_key(state, round_keys[0])
-    
-#     for i in range(1, 10):
-#         print(f"round[{i}].start: {state}")
-#         state = inv_sub_bytes(state)
-#         print(f"round[{i}].inv.sub_bytes: {state}")
-#         state = inv_shift_rows(state)
-#         print(f"round[{i}].inv.shift_rows: {state}")
-#         if i < 10:
-#             state = inv_mix_columns(state)
-#             print(f"round[{i}].inv.mix.columns: {state}")
-#         state = inv_add_round_key(state, round_keys[i])
-#         print(f"round[{i}].inv.add_round_keys: {state}")
-    
-#     return state
 
 def aes_decrypt(ciphertext, key):
     """Descriptografa o texto cifrado usando a chave fornecida."""
