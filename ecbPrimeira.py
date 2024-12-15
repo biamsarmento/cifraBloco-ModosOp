@@ -1,10 +1,11 @@
 import comboComRodada as aes
+import imagem
 
 caminho_imagem_antes_txt = 'selfieAntes.txt'
 caminho_imagem_depois_txt = 'selfieDepois.txt'
 caminho_blocos_encrypted_txt = 'blocos_encrypt.txt'
 caminho_blocos_decrypted_txt = 'blocos_decrypt.txt'
-
+caminhoImagemRec = 'selfie_recuperada_ECB.jpeg'
 
 def blocks_prep(caminho_txt):
     # Lê a string hexadecimal do arquivo .txt
@@ -58,17 +59,6 @@ def ecb_cipher(blocks, key):
     
     return blocos_criptografados
 
-# def ecb_decipher(caminho, key):
-#     # Array para armazenar os resultados criptografados
-#     blocos_descriptografados = []
-    
-#     # Para cada bloco na lista de blocos, criptografa com aes_encrypt
-#     for bloco in blocks:
-#         criptografado = aes.aes_encrypt(aes.converter_para_decimais(bloco), key, 10)
-#         blocos_criptografados.append(aes.format_state_hex(criptografado))
-    
-#     return blocos_criptografados
-
 def ecb_decipher(caminho, key):
     # Array para armazenar os resultados descriptografados
     blocos_descriptografados = []
@@ -108,31 +98,6 @@ def blocks_unprep(caminho_decrypted, caminho_saida):
     return hex_string
 
 
-
-# def ecb_decipher(blocks, key):
-#     # Array para armazenar os resultados criptografados
-#     blocos_criptografados = []
-    
-#     # Para cada bloco na lista de blocos, criptografa com aes_encrypt
-#     for bloco in blocks:
-#         # Converte o bloco no formato hexadecimal (sem espaços) para decimal
-#         bloco_decimal = aes.converter_para_decimais(bloco.replace(" ", ""))
-        
-#         # Criptografa o bloco com o algoritmo AES no modo ECB
-#         criptografado = aes.aes_encrypt(bloco_decimal, key, 10)
-        
-#         # Converte o bloco criptografado de volta para o formato hexadecimal
-#         blocos_criptografados.append(aes.format_state_hex(criptografado))
-    
-#     # Salva os blocos criptografados em um arquivo de texto
-#     with open(caminho_blocos_encrypt_txt, 'w') as output_file:
-#         for bloco_criptografado in blocos_criptografados:
-#             output_file.write(bloco_criptografado + '\n')
-    
-#     return blocos_criptografados
-
-    
-
 def main():
     
     choice = input("Digite 1 para cifrar e 2 para decifrar: ")
@@ -150,10 +115,34 @@ def main():
         resultadoChave = aes.converter_para_bytes(chave)
         print("\nChave: ", resultadoChave)
 
+        caminho_selfie = input("\nInsira o caminho da imagem: ")
+
+        hex_string = imagem.imagem_para_hex('selfie.jpeg')
+        imagem.salvar_hex_em_txt(hex_string, caminho_imagem_antes_txt)
+
         blocos = blocks_prep(caminho_imagem_antes_txt)
         
         blocos_encrypted = ecb_cipher(blocos, resultadoChave)
         print("Blocos criptografados: \n", blocos_encrypted)
+        
+        verImagem = input("\nDeseja ver a imagem? y para sim e n para não: ")
+
+        if verImagem == 'y':
+            print("Imagem original está em selfie_original.jpeg")
+            print("Imagem criptografada está em selfie_cripto.jpeg")
+
+            with open(caminho_imagem_antes_txt, 'r') as file:
+                hex_string_lido = file.read()
+            imagem.hex_para_imagem(hex_string_lido, 'selfie_original.jpeg')
+            
+            blocosUnp = blocks_unprep(caminho_blocos_encrypted_txt, 'imagem_depois.txt')
+            
+            with open('imagem_depois.txt', 'r') as file:
+                hex_string_lido2 = file.read()
+            imagem.hex_para_imagem(hex_string_lido2, 'selfie_cripto.jpeg')
+        else:
+            return
+
 
     elif choice == '2':
         chave = input("\nInsira a chave nesse formato: \n"
@@ -174,6 +163,15 @@ def main():
         blocos_unpreped = blocks_unprep(caminho_blocos_decrypted_txt, caminho_imagem_depois_txt)
 
         print("\nResultado final:\n", blocos_unpreped)
+
+        verImagem = input("\nDeseja ver o resultado da imagem? y para sim e n para não: ")
+
+        if verImagem == 'y':
+            with open(caminho_imagem_depois_txt, 'r') as file:
+                hex_string_lido = file.read()
+            imagem.hex_para_imagem(hex_string_lido, caminhoImagemRec)
+        else:
+            return
 
 
 if __name__ == "__main__":

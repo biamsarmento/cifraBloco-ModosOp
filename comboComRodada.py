@@ -209,38 +209,38 @@ def aes_encrypt(text, key, rounds):
 
     round_keys = key_expansion(key, rounds)  # Corrige o formato das subchaves
     # Testando se a saída corresponde ao esperado
-    for i, rk in enumerate(round_keys):
-        print(f"Round Key {i}:", format_state_hex(rk))
+    # for i, rk in enumerate(round_keys):
+    #     print(f"Round Key {i}:", format_state_hex(rk))
 
     # print("RoundKeys: ", round_keys)
 
     # Rodada inicial
-    print("State inicial:", format_state_hex(state))
+    # print("State inicial:", format_state_hex(state))
     firstAddRoundKey = add_round_key(state, round_keys[0])
     # print("State 0 ", state)
 
     # 9 rodadas intermediárias
     for i in range(1, rounds):
-        print(f"round[{i}].start: {format_state_hex(firstAddRoundKey)}")
+        # print(f"round[{i}].start: {format_state_hex(firstAddRoundKey)}")
         afterSubBytes = sub_bytes(firstAddRoundKey)
-        print(f"round[{i}].sub_bytes: {format_state_hex(afterSubBytes)}")
+        # print(f"round[{i}].sub_bytes: {format_state_hex(afterSubBytes)}")
         afterShiftRows = shift_rows(afterSubBytes)
-        print(f"round[{i}].shift_rows: {format_state_hex(afterShiftRows)}")
+        # print(f"round[{i}].shift_rows: {format_state_hex(afterShiftRows)}")
         afterMixColumns = mix_columns(afterShiftRows)
-        print(f"round[{i}].mix_columns: {format_state_hex(afterMixColumns)}")
+        # print(f"round[{i}].mix_columns: {format_state_hex(afterMixColumns)}")
         afterAddRoundKey = add_round_key(afterMixColumns, round_keys[i])
-        print(f"round[{i}].add_round_keys: {format_state_hex(afterAddRoundKey)}")
+        # print(f"round[{i}].add_round_keys: {format_state_hex(afterAddRoundKey)}")
         # print(f"State {i}", state)
 
     # Última rodada
-    print(f"round[{rounds}].start: {format_state_hex(afterAddRoundKey)}")
+    # print(f"round[{rounds}].start: {format_state_hex(afterAddRoundKey)}")
     afterSubBytes = sub_bytes(afterAddRoundKey)
-    print(f"round[{rounds}].sub_bytes: {format_state_hex(afterSubBytes)}")
+    # print(f"round[{rounds}].sub_bytes: {format_state_hex(afterSubBytes)}")
     afterShiftRows = shift_rows(afterSubBytes)
-    print(f"round[{rounds}].shift_rows: {format_state_hex(afterShiftRows)}")
+    # print(f"round[{rounds}].shift_rows: {format_state_hex(afterShiftRows)}")
     afterAddRoundKey = add_round_key(afterShiftRows, round_keys[rounds])
-    print(f"round[{rounds}].add_round_keys: {format_state_hex(afterAddRoundKey)}")
-    print("Last State ", format_state_hex(afterAddRoundKey))
+    # print(f"round[{rounds}].add_round_keys: {format_state_hex(afterAddRoundKey)}")
+    # print("Last State ", format_state_hex(afterAddRoundKey))
 
     return state
 
@@ -459,34 +459,34 @@ def aes_decrypt(ciphertext, key, rounds):
     """Descriptografa o texto cifrado usando a chave fornecida."""
     round_keys = inv_key_expansion(key, rounds)
 
-    for i, rk in enumerate(round_keys):
-        print(f"Round Key {i}:", format_state_hex(rk))
+    # for i, rk in enumerate(round_keys):
+    #     print(f"Round Key {i}:", format_state_hex(rk))
 
     state = ciphertext
 
     # Etapa inicial: Adiciona a chave da última rodada
-    print("State 0: ", format_state_hex(state))
+    # print("State 0: ", format_state_hex(state))
     state = inv_add_round_key(state, round_keys[0])
 
     # Rodadas principais (Nr-1 rodadas)
     for round in range(1, rounds):
-        print(f"round[{round}].start: {format_state_hex(state)}")
+        # print(f"round[{round}].start: {format_state_hex(state)}")
         state = inv_shift_rows(state)
-        print(f"round[{round}].inv.shift_rows: {format_state_hex(state)}")
+        # print(f"round[{round}].inv.shift_rows: {format_state_hex(state)}")
         state = inv_sub_bytes(state)
-        print(f"round[{round}].inv.sub_bytes: {format_state_hex(state)}")
+        # print(f"round[{round}].inv.sub_bytes: {format_state_hex(state)}")
         state = inv_add_round_key(state, round_keys[round])
-        print(f"round[{round}].inv.add_round_keys: {format_state_hex(state)}")
+        # print(f"round[{round}].inv.add_round_keys: {format_state_hex(state)}")
         state = process_inv_mix_columns(state)
-        print(f"round[{round}].inv.mix.columns: {format_state_hex(state)}")
+        # print(f"round[{round}].inv.mix.columns: {format_state_hex(state)}")
 
     # Rodada final (sem InvMixColumns)
     state = inv_shift_rows(state)
-    print("Final round.inv.shift_rows: ", format_state_hex(state))
+    # print("Final round.inv.shift_rows: ", format_state_hex(state))
     state = inv_sub_bytes(state)
-    print("Final round.inv.sub_bytes: ", format_state_hex(state))
+    # print("Final round.inv.sub_bytes: ", format_state_hex(state))
     state = inv_add_round_key(state, round_keys[rounds])
-    print("Final round.inv.add_round_keys: ", format_state_hex(state))
+    # print("Final round.inv.add_round_keys: ", format_state_hex(state))
 
     return state
 
