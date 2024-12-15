@@ -159,12 +159,50 @@ def mix_columns(state):
 
 # Acredito que as chaves estejam sendo geradas corretamente.
 
-def key_expansion(key):
-    """Expande a chave para 11 rodadas (AES-128)."""
-    # Constantes para AES-128
+# def key_expansion(key, rounds):
+#     """Expande a chave para 11 rodadas (AES-128)."""
+#     # Constantes para AES-128
+#     Nb = 4  # Número de colunas (32 bits) no estado
+#     Nk = 4  # Número de palavras (32 bits) na chave original
+#     Nr = 10  # Número de rodadas
+#     RCON = [0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x1B, 0x36]
+
+#     # Conversão da chave inicial em palavras (w[0] até w[Nk-1])
+#     w = []
+#     for i in range(Nk):
+#         w.append([key[4 * i], key[4 * i + 1], key[4 * i + 2], key[4 * i + 3]])
+
+#     # Expansão da chave para (Nr + 1) * Nb palavras
+#     for i in range(Nk, Nb * (Nr + 1)):
+#         temp = w[i - 1]  # Última palavra gerada
+
+#         # RotWord e SubWord a cada Nk palavras
+#         if i % Nk == 0:
+#             # RotWord (circular shift)
+#             temp = temp[1:] + temp[:1]
+#             # SubWord (substituição via S-Box)
+#             temp = [S_BOX[b >> 4][b & 0x0F] for b in temp]
+#             # XOR com RCON
+#             temp[0] ^= RCON[(i // Nk) - 1]
+
+#         # SubWord para o caso especial de AES-192 ou AES-256 (Nk > 6)
+#         elif Nk > 6 and i % Nk == 4:
+#             temp = [S_BOX[b >> 4][b & 0x0F] for b in temp]
+
+#         # XOR com a palavra Nk posições antes
+#         w.append([w[i - Nk][j] ^ temp[j] for j in range(4)])
+
+#     # Retorna as chaves expandidas em blocos de 4 palavras (4x4 bytes)
+#     return [w[i:i + Nb] for i in range(0, len(w), Nb)]
+
+def key_expansion(key, rounds):
+
+    rounds = int(rounds)  # Garante que rounds seja um inteiro
+    """Expande a chave para o número especificado de rodadas."""
+    # Constantes para AES
     Nb = 4  # Número de colunas (32 bits) no estado
     Nk = 4  # Número de palavras (32 bits) na chave original
-    Nr = 10  # Número de rodadas
+    Nr = rounds  # Número de rodadas (passado como argumento)
     RCON = [0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x1B, 0x36]
 
     # Conversão da chave inicial em palavras (w[0] até w[Nk-1])
@@ -195,7 +233,10 @@ def key_expansion(key):
     # Retorna as chaves expandidas em blocos de 4 palavras (4x4 bytes)
     return [w[i:i + Nb] for i in range(0, len(w), Nb)]
 
-def aes_encrypt(text, key):
+
+def aes_encrypt(text, key, rounds):
+
+    rounds = int(rounds)
 
     state = text
 
@@ -205,7 +246,7 @@ def aes_encrypt(text, key):
     afterMixColumns = 0
     afterAddRoundKey = 0
 
-    round_keys = key_expansion(key)  # Corrige o formato das subchaves
+    round_keys = key_expansion(key, rounds)  # Corrige o formato das subchaves
     # Testando se a saída corresponde ao esperado
     for i, rk in enumerate(round_keys):
         print(f"Round Key {i}:", format_state_hex(rk))
@@ -218,7 +259,7 @@ def aes_encrypt(text, key):
     # print("State 0 ", state)
 
     # 9 rodadas intermediárias
-    for i in range(1, 10):
+    for i in range(1, rounds):
         print(f"round[{i}].start: {format_state_hex(firstAddRoundKey)}")
         afterSubBytes = sub_bytes(firstAddRoundKey)
         print(f"round[{i}].sub_bytes: {format_state_hex(afterSubBytes)}")
@@ -231,14 +272,14 @@ def aes_encrypt(text, key):
         # print(f"State {i}", state)
 
     # Última rodada
-    print(f"round[{10}].start: {format_state_hex(afterAddRoundKey)}")
+    print(f"round[{rounds}].start: {format_state_hex(afterAddRoundKey)}")
     afterSubBytes = sub_bytes(afterAddRoundKey)
-    print(f"round[{10}].sub_bytes: {format_state_hex(afterSubBytes)}")
+    print(f"round[{rounds}].sub_bytes: {format_state_hex(afterSubBytes)}")
     afterShiftRows = shift_rows(afterSubBytes)
-    print(f"round[{10}].shift_rows: {format_state_hex(afterShiftRows)}")
-    afterAddRoundKey = add_round_key(afterShiftRows, round_keys[10])
-    print(f"round[{10}].add_round_keys: {format_state_hex(afterAddRoundKey)}")
-    print("State 10 ", format_state_hex(afterAddRoundKey))
+    print(f"round[{rounds}].shift_rows: {format_state_hex(afterShiftRows)}")
+    afterAddRoundKey = add_round_key(afterShiftRows, round_keys[rounds])
+    print(f"round[{rounds}].add_round_keys: {format_state_hex(afterAddRoundKey)}")
+    print("Last State ", format_state_hex(afterAddRoundKey))
 
     return state
 
@@ -368,12 +409,55 @@ def format_input_output(input_bytes, to_columns=True):
         return [input_bytes[row][col] for col in range(4) for row in range(4)]
 
 
-def inv_key_expansion(key):
-    """Expande a chave para 11 rodadas (AES-128)."""
-    # Constantes para AES-128
+# def inv_key_expansion(key, rounds):
+
+#     rounds = int(rounds)
+#     """Expande a chave para 11 rodadas (AES-128)."""
+#     # Constantes para AES-128
+#     Nb = 4  # Número de colunas (32 bits) no estado
+#     Nk = 4  # Número de palavras (32 bits) na chave original
+#     Nr = 10  # Número de rodadas
+#     RCON = [0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x1B, 0x36]
+
+#     # Conversão da chave inicial em palavras (w[0] até w[Nk-1])
+#     w = []
+#     for i in range(Nk):
+#         w.append([key[4 * i], key[4 * i + 1], key[4 * i + 2], key[4 * i + 3]])
+
+#     # Expansão da chave para (Nr + 1) * Nb palavras
+#     for i in range(Nk, Nb * (Nr + 1)):
+#         temp = w[i - 1]  # Última palavra gerada
+
+#         # RotWord e SubWord a cada Nk palavras
+#         if i % Nk == 0:
+#             # RotWord (circular shift)
+#             temp = temp[1:] + temp[:1]
+#             # SubWord (substituição via S-Box)
+#             temp = [S_BOX[b >> 4][b & 0x0F] for b in temp]
+#             # XOR com RCON
+#             temp[0] ^= RCON[(i // Nk) - 1]
+
+#         # SubWord para o caso especial de AES-192 ou AES-256 (Nk > 6)
+#         elif Nk > 6 and i % Nk == 4:
+#             temp = [S_BOX[b >> 4][b & 0x0F] for b in temp]
+
+#         # XOR com a palavra Nk posições antes
+#         w.append([w[i - Nk][j] ^ temp[j] for j in range(4)])
+
+#     # Agrupa as chaves expandidas em blocos de 4 palavras (4x4 bytes)
+#     expanded_keys = [w[i:i + Nb] for i in range(0, len(w), Nb)]
+
+#     # Retorna as chaves na ordem inversa
+#     return expanded_keys[::-1]
+
+def inv_key_expansion(key, rounds):
+    rounds = int(rounds)
+    """Expande a chave para o número especificado de rodadas e inverte a ordem das chaves."""
+    
+    # Constantes para AES
     Nb = 4  # Número de colunas (32 bits) no estado
     Nk = 4  # Número de palavras (32 bits) na chave original
-    Nr = 10  # Número de rodadas
+    Nr = rounds  # Número de rodadas (passado como argumento)
     RCON = [0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x1B, 0x36]
 
     # Conversão da chave inicial em palavras (w[0] até w[Nk-1])
@@ -407,9 +491,12 @@ def inv_key_expansion(key):
     # Retorna as chaves na ordem inversa
     return expanded_keys[::-1]
 
-def aes_decrypt(ciphertext, key):
+
+def aes_decrypt(ciphertext, key, rounds):
+
+    rounds = int(rounds)
     """Descriptografa o texto cifrado usando a chave fornecida."""
-    round_keys = inv_key_expansion(key)
+    round_keys = inv_key_expansion(key, rounds)
 
     for i, rk in enumerate(round_keys):
         print(f"Round Key {i}:", format_state_hex(rk))
@@ -421,7 +508,7 @@ def aes_decrypt(ciphertext, key):
     state = inv_add_round_key(state, round_keys[0])
 
     # Rodadas principais (Nr-1 rodadas)
-    for round in range(1, 10):
+    for round in range(1, rounds):
         print(f"round[{round}].start: {format_state_hex(state)}")
         state = inv_shift_rows(state)
         print(f"round[{round}].inv.shift_rows: {format_state_hex(state)}")
@@ -437,7 +524,7 @@ def aes_decrypt(ciphertext, key):
     print("Final round.inv.shift_rows: ", format_state_hex(state))
     state = inv_sub_bytes(state)
     print("Final round.inv.sub_bytes: ", format_state_hex(state))
-    state = inv_add_round_key(state, round_keys[10])
+    state = inv_add_round_key(state, round_keys[rounds])
     print("Final round.inv.add_round_keys: ", format_state_hex(state))
 
     return state
@@ -508,6 +595,7 @@ def main():
     choice = input("Digite 1 para cifrar e 2 para decifrar: ")
 
     if choice == '1':
+        rodadas = input("Quantas rodadas deseja? ")
         textCipher = input("Digite 16 bytes da seguinte maneira: \n"
                      "00 11 22 33 44 55 66 77 88 99 aa bb cc dd ee ff\n"
                      "Insira aqui: ")
@@ -520,11 +608,12 @@ def main():
         resultadoChave = converter_para_bytes(provisorioChave)
         print("Chave: ", resultadoChave)
 
-        encrypted_state = aes_encrypt(resultadoText, resultadoChave)
+        encrypted_state = aes_encrypt(resultadoText, resultadoChave, rodadas)
 
         print("Texto Cifrado: ", format_state_hex(encrypted_state))
 
     elif choice == '2':
+        rodadas = input("Quantas rodadas deseja? ")
         textDecipher = input("Digite 16 bytes da seguinte maneira: \n"
                      "69 c4 e0 d8 6a 7b 04 30 d8 cd b7 80 70 b4 c5 5a\n"
                      "Insira aqui: ")
@@ -536,7 +625,7 @@ def main():
         provisorioChave = converter_bytes(chaveDecipher)
         resultadoChave = converter_para_bytes(provisorioChave)
         print("Chave: ", resultadoChave)
-        decrypted_state = aes_decrypt(resultadoTextDecipher, resultadoChave)
+        decrypted_state = aes_decrypt(resultadoTextDecipher, resultadoChave, rodadas)
         
         print("Texto Decifrado: ", format_state_hex(decrypted_state))
     
