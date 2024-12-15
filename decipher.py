@@ -133,58 +133,128 @@ def inv_shift_rows(state):
     
 #     return temp
 
-# Função para multiplicação por 2 em GF(2^8)
-def xtime(x):
-    return ((x << 1) & 0xFF) ^ (0x1B if (x & 0x80) else 0)
+# # Função para multiplicação por 2 em GF(2^8)
+# def xtime(x):
+#     return ((x << 1) & 0xFF) ^ (0x1B if (x & 0x80) else 0)
 
-# Funções para multiplicações específicas em GF(2^8)
-def mul0e(x):
-    return xtime(xtime(xtime(x))) ^ xtime(xtime(x)) ^ xtime(x)
+# # Funções para multiplicações específicas em GF(2^8)
+# def mul0e(x):
+#     return xtime(xtime(xtime(x))) ^ xtime(xtime(x)) ^ xtime(x)
 
-def mul0b(x):
-    return xtime(xtime(xtime(x))) ^ xtime(x) ^ x
+# def mul0b(x):
+#     return xtime(xtime(xtime(x))) ^ xtime(x) ^ x
 
-def mul0d(x):
-    return xtime(xtime(xtime(x))) ^ xtime(xtime(x)) ^ x
+# def mul0d(x):
+#     return xtime(xtime(xtime(x))) ^ xtime(xtime(x)) ^ x
 
-def mul09(x):
-    return xtime(xtime(xtime(x))) ^ x
+# def mul09(x):
+#     return xtime(xtime(xtime(x))) ^ x
 
-# Função InvMixColumns
-# Função de InvMixColumns
+# # Função InvMixColumns
+# # Função de InvMixColumns
+# def inv_mix_columns(state):
+#     print("Entry Mix Columns: ", state)
+#     print("Entry Mix Columns: ", format_state_hex(state))
+
+#     temp = state
+#     # Matriz inversa de transformação para InvMixColumns
+#     inv_mix_matrix = [
+#         [0x0e, 0x0b, 0x0d, 0x09],
+#         [0x09, 0x0e, 0x0b, 0x0d],
+#         [0x0d, 0x09, 0x0e, 0x0b],
+#         [0x0b, 0x0d, 0x09, 0x0e]
+#     ]
+    
+#     # Matriz temporária para armazenar o resultado
+#     temp_state = [[0] * 4 for _ in range(4)]
+    
+#     # Multiplica e aplica o XOR para cada coluna usando a matriz inversa
+#     for col in range(4):
+#         for row in range(4):
+#             temp_state[row][col] = 0
+#             for k in range(4):
+#                 if inv_mix_matrix[row][k] == 0x09:
+#                     temp_state[row][col] ^= mul09(temp[k][col])
+#                 elif inv_mix_matrix[row][k] == 0x0b:
+#                     temp_state[row][col] ^= mul0b(temp[k][col])
+#                 elif inv_mix_matrix[row][k] == 0x0d:
+#                     temp_state[row][col] ^= mul0d(temp[k][col])
+#                 elif inv_mix_matrix[row][k] == 0x0e:
+#                     temp_state[row][col] ^= mul0e(temp[k][col])
+    
+#     # Atualiza o estado com o resultado da operação de InvMixColumns
+#     for i in range(4):
+#         for j in range(4):
+#             temp[i][j] = temp_state[i][j]
+    
+#     return temp
+
+# Função para transpor a matriz (linhas <-> colunas)
+def transpose(matrix):
+    """
+    Transpõe uma matriz 4x4.
+    Exemplo: de linhas para colunas ou vice-versa.
+    """
+    return [[matrix[row][col] for row in range(4)] for col in range(4)]
+
+# Função para multiplicação no campo GF(2^8)
+def galois_multiply(a, b):
+    p = 0
+    for i in range(8):
+        if b & 1:
+            p ^= a
+        hi_bit_set = a & 0x80
+        a <<= 1
+        if hi_bit_set:
+            a ^= 0x1B
+        b >>= 1
+    return p & 0xFF
+
+# Matriz inversa do MixColumns no AES
+INV_MIX_COLUMNS_MATRIX = [
+    [0x0E, 0x0B, 0x0D, 0x09],
+    [0x09, 0x0E, 0x0B, 0x0D],
+    [0x0D, 0x09, 0x0E, 0x0B],
+    [0x0B, 0x0D, 0x09, 0x0E],
+]
+
+# Função InvMixColumns corrigida
 def inv_mix_columns(state):
-    temp = state
-    # Matriz inversa de transformação para InvMixColumns
-    inv_mix_matrix = [
-        [0x0e, 0x0b, 0x0d, 0x09],
-        [0x09, 0x0e, 0x0b, 0x0d],
-        [0x0d, 0x09, 0x0e, 0x0b],
-        [0x0b, 0x0d, 0x09, 0x0e]
-    ]
-    
-    # Matriz temporária para armazenar o resultado
-    temp_state = [[0] * 4 for _ in range(4)]
-    
-    # Multiplica e aplica o XOR para cada coluna usando a matriz inversa
+    """
+    Aplica a operação InvMixColumns em uma matriz state (4x4) organizada por colunas.
+    """
+    new_state = [[0] * 4 for _ in range(4)]
     for col in range(4):
         for row in range(4):
-            temp_state[row][col] = 0
+            value = 0
             for k in range(4):
-                if inv_mix_matrix[row][k] == 0x09:
-                    temp_state[row][col] ^= mul09(temp[k][col])
-                elif inv_mix_matrix[row][k] == 0x0b:
-                    temp_state[row][col] ^= mul0b(temp[k][col])
-                elif inv_mix_matrix[row][k] == 0x0d:
-                    temp_state[row][col] ^= mul0d(temp[k][col])
-                elif inv_mix_matrix[row][k] == 0x0e:
-                    temp_state[row][col] ^= mul0e(temp[k][col])
-    
-    # Atualiza o estado com o resultado da operação de InvMixColumns
-    for i in range(4):
-        for j in range(4):
-            temp[i][j] = temp_state[i][j]
-    
-    return temp
+                value ^= galois_multiply(INV_MIX_COLUMNS_MATRIX[row][k], state[k][col])
+            new_state[row][col] = value
+    return new_state
+
+# Função principal que organiza a entrada, aplica InvMixColumns e reorganiza a saída
+def process_inv_mix_columns(input_state):
+    """
+    - Transpõe a entrada (linhas -> colunas).
+    - Aplica InvMixColumns.
+    - Transpõe a saída (colunas -> linhas).
+    """
+    print("Entrada original:")
+
+    # Transpõe a matriz de linhas para colunas
+    transposed_input = transpose(input_state)
+    print("Matriz transposta (para colunas):")
+
+    # Aplica InvMixColumns
+    result = inv_mix_columns(transposed_input)
+    print("Matriz após InvMixColumns:")
+
+    # Transpõe a matriz de volta para o formato original (colunas -> linhas)
+    final_result = transpose(result)
+    print("Matriz final transposta (de volta para linhas):")
+
+    return final_result
+
 
 # Reformatar entrada e saída
 def format_input_output(input_bytes, to_columns=True):
@@ -292,7 +362,7 @@ def aes_decrypt(ciphertext, key):
         print(f"round[{round}].inv.sub_bytes: {format_state_hex(state)}")
         state = inv_add_round_key(state, round_keys[round])
         print(f"round[{round}].inv.add_round_keys: {format_state_hex(state)}")
-        state = inv_mix_columns(state)
+        state = process_inv_mix_columns(state)
         print(f"round[{round}].inv.mix.columns: {format_state_hex(state)}")
 
     # Rodada final (sem InvMixColumns)
@@ -300,7 +370,7 @@ def aes_decrypt(ciphertext, key):
     print("Final round.inv.shift_rows: ", format_state_hex(state))
     state = inv_sub_bytes(state)
     print("Final round.inv.sub_bytes: ", format_state_hex(state))
-    state = inv_add_round_key(state, round_keys[0])
+    state = inv_add_round_key(state, round_keys[10])
     print("Final round.inv.add_round_keys: ", format_state_hex(state))
 
     return state
@@ -322,6 +392,6 @@ key = bytes([
 ])
 
 plaintext = aes_decrypt(ciphertext, key)
-print("Texto Decifrado: ", plaintext)
+print("Texto Decifrado: ", format_state_hex(plaintext))
 
 # print("Texto Decifrado:", ''.join(chr(x) for row in plaintext for x in row))

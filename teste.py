@@ -1,69 +1,63 @@
-# Função para multiplicação por 2 em GF(2^8)
-def xtime(x):
-    return ((x << 1) & 0xFF) ^ (0x1B if (x & 0x80) else 0)
+# Função para multiplicação no campo GF(2^8)
+def galois_multiply(a, b):
+    p = 0
+    for i in range(8):
+        if b & 1:  # Verifica se o bit menos significativo de b está setado
+            p ^= a  # XOR com a
+        hi_bit_set = a & 0x80  # Verifica o bit mais significativo
+        a <<= 1  # Desloca para a esquerda
+        if hi_bit_set:
+            a ^= 0x1B  # Aplica a redução com o polinômio irreducível AES
+        b >>= 1  # Desloca b para a direita
+    return p & 0xFF
 
-# Funções para multiplicações específicas em GF(2^8)
-def mul9(x):
-    return xtime(xtime(xtime(x))) ^ x  # x * 9 = (x * 2 * 2 * 2) + x
-
-def mul11(x):
-    return xtime(xtime(x)) ^ x ^ xtime(x)  # x * 11 = ((x * 2 * 2) + x) * 2 + x
-
-def mul13(x):
-    return xtime(x) ^ x ^ xtime(xtime(x))  # x * 13 = ((x * 2) + x) * 2 * 2 + x
-
-def mul14(x):
-    return xtime(x) ^ xtime(xtime(x)) ^ xtime(x)  # x * 14 = ((x * 2) + x) * 2 + x * 2
-
-# Matriz inversa de transformação para Inverse MixColumns
-INV_MIX_MATRIX = [
-    [0x0e, 0x0b, 0x0d, 0x09],
-    [0x09, 0x0e, 0x0b, 0x0d],
-    [0x0d, 0x09, 0x0e, 0x0b],
-    [0x0b, 0x0d, 0x09, 0x0e]
+# Matriz inversa do MixColumns no AES
+INV_MIX_COLUMNS_MATRIX = [
+    [0x0E, 0x0B, 0x0D, 0x09],
+    [0x09, 0x0E, 0x0B, 0x0D],
+    [0x0D, 0x09, 0x0E, 0x0B],
+    [0x0B, 0x0D, 0x09, 0x0E],
 ]
 
-# Função Inverse MixColumns
+# Função InvMixColumns corrigida
 def inv_mix_columns(state):
-    # Criar uma matriz temporária para armazenar o resultado
-    temp_state = [[0] * 4 for _ in range(4)]
+    """
+    Aplica a operação InvMixColumns em uma matriz state (4x4).
+    A matriz state é organizada por colunas.
+    """
+    new_state = [[0] * 4 for _ in range(4)]  # Inicializa a nova matriz
+    
+    # Processa cada coluna individualmente
+    for col in range(4):
+        print(f"Processando coluna {col}:")
+        for row in range(4):
+            value = 0
+            # Multiplica cada elemento da matriz inversa pelos elementos da coluna
+            for k in range(4):
+                product = galois_multiply(INV_MIX_COLUMNS_MATRIX[row][k], state[k][col])
+                print(f"  Multiplica inv_matrix[{row}][{k}]={hex(INV_MIX_COLUMNS_MATRIX[row][k])} "
+                      f"por state[{k}][{col}]={hex(state[k][col])} => {hex(product)}")
+                value ^= product  # Aplica o XOR
+            new_state[row][col] = value
+            print(f"  Resultado new_state[{row}][{col}] = {hex(value)}")
+    return new_state
 
-    # Itera sobre as linhas e colunas da matriz
-    for i in range(4):  # Para cada linha
-        for j in range(4):  # Para cada coluna
-            for k in range(4):  # Para cada elemento na linha da matriz inversa
-                byte = state[k][j]
-                if INV_MIX_MATRIX[i][k] == 0x09:
-                    temp_state[i][j] ^= mul9(byte)
-                elif INV_MIX_MATRIX[i][k] == 0x0b:
-                    temp_state[i][j] ^= mul11(byte)
-                elif INV_MIX_MATRIX[i][k] == 0x0d:
-                    temp_state[i][j] ^= mul13(byte)
-                elif INV_MIX_MATRIX[i][k] == 0x0e:
-                    temp_state[i][j] ^= mul14(byte)
+# Função auxiliar para exibir a matriz
+def print_matrix(matrix, label):
+    print(f"{label}:")
+    for row in matrix:
+        print(" ".join([hex(byte)[2:].zfill(2) for byte in row]))
+    print()
 
-    # Copia o resultado de volta para o estado original
-    for i in range(4):
-        for j in range(4):
-            state[i][j] = temp_state[i][j]
-
-# Dados de entrada no formato 4x4 (4 linhas e 4 colunas)
-input_bytes = [
-    [0xe9, 0xf7, 0x4e, 0xec], 
-    [0x02, 0x30, 0x20, 0xf6], 
-    [0x1b, 0xf2, 0xcc, 0xf2], 
-    [0x35, 0x3c, 0x21, 0xc7]
+# Entrada correta (por colunas)
+state = [
+    [0xe9, 0x02, 0x1b, 0x35],  # Coluna 0
+    [0xf7, 0x30, 0xf2, 0x3c],  # Coluna 1
+    [0x4e, 0x20, 0xcc, 0x21],  # Coluna 2
+    [0xec, 0xf6, 0xf2, 0xc7],  # Coluna 3
 ]
 
-# A matriz já está no formato 4x4, então podemos usá-la diretamente
-input_state = input_bytes  # Não há necessidade de reformatar a entrada
-
-# Aplica Inverse MixColumns
-inv_mix_columns(input_state)
-
-# Converte de volta para col-major e depois para uma sequência linear
-result_bytes = [input_state[row][col] for row in range(4) for col in range(4)]
-
-# Exibe o resultado em hexadecimal (como sequência contínua)
-result_hex = "".join(f"{byte:02x}" for byte in result_bytes)
-print("\nResultado final em hexadecimal:", result_hex)
+# Executa o InvMixColumns
+print_matrix(state, "Matriz de entrada (state)")
+result = inv_mix_columns(state)
+print_matrix(result, "Matriz resultante após InvMixColumns")
