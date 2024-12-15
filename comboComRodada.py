@@ -156,45 +156,6 @@ def mix_columns(state):
             
     return temp
 
-
-# Acredito que as chaves estejam sendo geradas corretamente.
-
-# def key_expansion(key, rounds):
-#     """Expande a chave para 11 rodadas (AES-128)."""
-#     # Constantes para AES-128
-#     Nb = 4  # Número de colunas (32 bits) no estado
-#     Nk = 4  # Número de palavras (32 bits) na chave original
-#     Nr = 10  # Número de rodadas
-#     RCON = [0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x1B, 0x36]
-
-#     # Conversão da chave inicial em palavras (w[0] até w[Nk-1])
-#     w = []
-#     for i in range(Nk):
-#         w.append([key[4 * i], key[4 * i + 1], key[4 * i + 2], key[4 * i + 3]])
-
-#     # Expansão da chave para (Nr + 1) * Nb palavras
-#     for i in range(Nk, Nb * (Nr + 1)):
-#         temp = w[i - 1]  # Última palavra gerada
-
-#         # RotWord e SubWord a cada Nk palavras
-#         if i % Nk == 0:
-#             # RotWord (circular shift)
-#             temp = temp[1:] + temp[:1]
-#             # SubWord (substituição via S-Box)
-#             temp = [S_BOX[b >> 4][b & 0x0F] for b in temp]
-#             # XOR com RCON
-#             temp[0] ^= RCON[(i // Nk) - 1]
-
-#         # SubWord para o caso especial de AES-192 ou AES-256 (Nk > 6)
-#         elif Nk > 6 and i % Nk == 4:
-#             temp = [S_BOX[b >> 4][b & 0x0F] for b in temp]
-
-#         # XOR com a palavra Nk posições antes
-#         w.append([w[i - Nk][j] ^ temp[j] for j in range(4)])
-
-#     # Retorna as chaves expandidas em blocos de 4 palavras (4x4 bytes)
-#     return [w[i:i + Nb] for i in range(0, len(w), Nb)]
-
 def key_expansion(key, rounds):
 
     rounds = int(rounds)  # Garante que rounds seja um inteiro
@@ -548,32 +509,17 @@ def verificar_formato(text):
     
     return True
 
-def converter_bytes(text):
-    # Verificar se a entrada está no formato correto
-    if not verificar_formato(text):
-        return "Formato inválido. Certifique-se de que a entrada contenha exatamente 16 bytes no formato hexadecimal (ex: 00 11 22 ...)"
-    
-    # Separar a string de entrada pelos espaços
-    bytes_lista = text.split()
-    
-    # Converter os bytes para o formato hexadecimal desejado
-    matriz = []
-    for i in range(0, 16, 4):
-        linha = [f"0x{byte.upper()}" for byte in bytes_lista[i:i+4]]
-        matriz.append(linha)
-    
-    return matriz
-
 def converter_para_bytes(matriz_hex):
+
     # Criar uma lista para armazenar os valores inteiros
     lista_bytes = []
 
-    # Iterar sobre cada linha da matriz
-    for linha in matriz_hex:
-        # Para cada elemento da linha (que é uma string hex), converta para inteiro
-        for item in linha:
-            # Remover o prefixo '0x' e converter para inteiro
-            lista_bytes.append(int(item, 16))
+    # Dividir a string de entrada em valores hexadecimais, ignorando espaços extras
+    valores_hex = matriz_hex.split()
+
+    # Iterar sobre os valores hexadecimais e convertê-los para inteiros
+    for item in valores_hex:
+        lista_bytes.append(int(item, 16))
     
     # Criar e retornar o objeto de bytes
     return bytes(lista_bytes)
@@ -595,42 +541,60 @@ def main():
     choice = input("Digite 1 para cifrar e 2 para decifrar: ")
 
     if choice == '1':
-        rodadas = input("Quantas rodadas deseja? ")
-        textCipher = input("Digite 16 bytes da seguinte maneira: \n"
+        rodadas = input("\nQuantas rodadas deseja? ")
+        textCipher = input("\nDigite 16 bytes da seguinte maneira: \n"
                      "00 11 22 33 44 55 66 77 88 99 aa bb cc dd ee ff\n"
                      "Insira aqui: ")
+        
+        if verificar_formato(textCipher) == False:
+            print("\nFormato inválido! Digite 16 bytes separados por um espaço.")
+            return 
+        
         resultadoText = converter_para_decimais(textCipher)
-        print("Texto: ", resultadoText)
-        chaveCipher = input("Agora digite a chave no mesmo formato:\n"
+        print("\nTexto: ", resultadoText)
+        chaveCipher = input("\nAgora digite a chave no mesmo formato:\n"
                       "00 01 02 03 04 05 06 07 08 09 0a 0b 0c 0d 0e 0f\n"
                       "Insira aqui: ")
-        provisorioChave = converter_bytes(chaveCipher)
-        resultadoChave = converter_para_bytes(provisorioChave)
-        print("Chave: ", resultadoChave)
+        
+        if verificar_formato(chaveCipher) == False:
+            print("\nFormato inválido! Digite 16 bytes separados por um espaço.")
+            return 
+
+        resultadoChave = converter_para_bytes(chaveCipher)
+        print("\nChave: ", resultadoChave)
 
         encrypted_state = aes_encrypt(resultadoText, resultadoChave, rodadas)
 
-        print("Texto Cifrado: ", format_state_hex(encrypted_state))
+        print("\nTexto Cifrado: ", format_state_hex(encrypted_state))
 
     elif choice == '2':
-        rodadas = input("Quantas rodadas deseja? ")
-        textDecipher = input("Digite 16 bytes da seguinte maneira: \n"
+        rodadas = input("\nQuantas rodadas deseja? ")
+        textDecipher = input("\nDigite 16 bytes da seguinte maneira: \n"
                      "69 c4 e0 d8 6a 7b 04 30 d8 cd b7 80 70 b4 c5 5a\n"
                      "Insira aqui: ")
+        
+        if verificar_formato(textDecipher) == False:
+            print("\nFormato inválido! Digite 16 bytes separados por um espaço.")
+            return 
+
         resultadoTextDecipher = converter_para_decimais(textDecipher)
-        print("Texto para decifrar: ", resultadoTextDecipher)
-        chaveDecipher = input("Agora digite a chave no mesmo formato:\n"
+        print("\nTexto para decifrar: ", resultadoTextDecipher)
+        chaveDecipher = input("\nAgora digite a chave no mesmo formato:\n"
                       "00 01 02 03 04 05 06 07 08 09 0a 0b 0c 0d 0e 0f\n"
                       "Insira aqui: ")
-        provisorioChave = converter_bytes(chaveDecipher)
-        resultadoChave = converter_para_bytes(provisorioChave)
-        print("Chave: ", resultadoChave)
+        
+        if verificar_formato(chaveDecipher) == False:
+            print("\nFormato inválido! Digite 16 bytes separados por um espaço.")
+            return 
+
+        resultadoChave = converter_para_bytes(chaveDecipher)
+        print("\nChave: ", resultadoChave)
         decrypted_state = aes_decrypt(resultadoTextDecipher, resultadoChave, rodadas)
         
-        print("Texto Decifrado: ", format_state_hex(decrypted_state))
+        print("\nTexto Decifrado: ", format_state_hex(decrypted_state))
     
     else:
-        print("Opção inválida :(")
+        print("\nOpção inválida :(")
 
 if __name__ == "__main__":
     main()
