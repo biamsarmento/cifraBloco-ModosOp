@@ -1,6 +1,7 @@
 import numpy as np
 import comboComRodada as aes
 import imagem
+import gcmPrimeiraWithTag as withTag
 
 def blocks_prep(caminho_txt):
     # Lê a string hexadecimal do arquivo .txt
@@ -124,22 +125,9 @@ iv_matrix = [
 # Número de rodadas (para AES-128, são 10 rodadas)
 rounds = 10
 
-# Cifra o IV com a chave
-# iv_plus_key = encrypt_iv_with_key(iv_matrix, key, rounds)
-# print(f'Encrypted IV: {iv_plus_key}')
-
 blocos_preped = blocks_prep('toCipher.txt')
-# print("Blocos Pep: ", blocos_preped)
-# print("BLOCOS_PREPED[0]: ", blocos_preped[0])
-
-# blocos_xored = xor_blocks(blocos_preped[0], iv_plus_key)
-# print("Xored: ", format_state_hex(blocos_xored))
 
 gcm(blocos_preped, key, iv_matrix)
 
-# incremented_iv = increment_iv(iv_matrix)
-# print("IV incrementado: ", format_state_hex(incremented_iv))
-
-# Exibe o IV cifrado
-# print(f'Encrypted IV: {format_state_hex(iv_plus_key)}')
-
+tag = withTag.calculate_tag_from_file('RESULTADO_GCM.txt', key)
+print(f'Tag gerada: {tag:#034x}')  # Exibe a tag em formato hexadecimal de 128 bits
