@@ -41,3 +41,8 @@ def hex_para_imagem(hex_string, caminho_imagem):
 # hex_para_imagem(hex_string_lido, caminho_imagem_recuperada)
 
 # print(f'Imagem salva como {caminho_imagem_recuperada}')
+
+# with open('imagem_depois.txt', 'r') as file:
+#     hex_string_lido = file.read()
+
+# hex_para_imagem(hex_string_lido, 'NOVA_IM.png')

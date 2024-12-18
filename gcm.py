@@ -1,7 +1,4 @@
-import numpy as np
-import comboComRodada as aes
-import imagem
-import gcmPrimeiraWithTag as withTag
+import aes
 
 def blocks_prep(caminho_txt):
     # Lê a string hexadecimal do arquivo .txt
@@ -62,54 +59,54 @@ def bytes_to_matrix(bytes_data):
     """Converte uma lista de 16 bytes de volta para uma matriz 4x4 de inteiros."""
     return [bytes_data[i:i+4] for i in range(0, len(bytes_data), 4)]
 
-def increment_iv(iv_matrix):
-    # Converte a matriz 4x4 em uma lista de bytes
-    iv_bytes = matrix_to_bytes(iv_matrix)
+def increment_iv(iv_inc):
+    # Converte a matriz 4x4 em uma lista de bytes (16 bytes)
+    iv_bytes = matrix_to_bytes(iv_inc)
     
-    # Incrementa o último byte
-    for i in reversed(range(len(iv_bytes))):
+    # Começa pelo último byte e propaga o carry, se necessário
+    for i in range(len(iv_bytes) - 1, -1, -1):
         iv_bytes[i] += 1
-        if iv_bytes[i] < 256:  # Se não ultrapassar 255, parar o incremento
+        if iv_bytes[i] < 256:  # Se o byte não ultrapassar 255, não há carry
             break
-        iv_bytes[i] = 0  # Caso ultrapasse 255, volta para 0 e propaga o incremento
-
+        iv_bytes[i] = 0  # Se ultrapassar 255, zera o byte e continua para o próximo
+       
     # Converte de volta para uma matriz 4x4
     return bytes_to_matrix(iv_bytes)
 
 # Função que cifra o IV (em formato de matriz 4x4) com a chave fornecida
-def encrypt_iv_with_key(iv_matrix, key, rounds):
+def encrypt_iv_with_key(iv_en, key, rounds):
     # Converte o IV para uma lista de 16 bytes
     # iv_bytes = matrix_to_bytes(iv_matrix)
 
     # Cifra o IV com a chave AES
-    iv_plus_key = aes.aes_encrypt(iv_matrix, key, rounds)
+    iv_plus_key = aes.aes_encrypt(iv_en, key, rounds)
 
     # Converte os bytes cifrados de volta para a matriz 4x4
     return format_state_hex(iv_plus_key)
 
-def gcm(blocos_preped, key, iv_matrix, rounds=10):
-    """Processa os blocos e salva o resultado XOR em um arquivo de texto."""
+import copy  # Importa a biblioteca para cópias profundas
+
+def gcm(blocos_preped, key, iv, dest_file, rounds=10):
+    iv_temp = copy.deepcopy(iv)  # Faz uma cópia profunda de iv
 
     # Abre o arquivo para salvar os resultados
-    with open("RESULTADO_GCM.txt", 'w') as result_file:
-        # Cifra o IV inicial com a chave
-        iv_plus_key = encrypt_iv_with_key(iv_matrix, key, rounds)
+    with open(dest_file, 'w') as result_file:
 
         # Itera sobre os blocos
         for i, bloco in enumerate(blocos_preped):
             # Realiza a operação XOR entre o bloco e o IV cifrado
+
+            iv_plus_key = encrypt_iv_with_key(iv_temp, key, rounds)
+            
             xor_result = xor_blocks(bloco, iv_plus_key)
 
             # Converte o resultado para o formato adequado e salva no arquivo
             result_file.write(format_state_hex(xor_result) + '\n')
 
             # Incrementa o IV para o próximo bloco
-            iv_matrix = increment_iv(iv_matrix)
+            iv = increment_iv(iv)  # Incrementa o IV antes de usá-lo novamente
 
-            # Cifra o novo IV incrementado com a chave
-            iv_plus_key = encrypt_iv_with_key(iv_matrix, key, rounds)
-
-# Exemplo de uso
+            iv_temp = copy.deepcopy(iv)  # Faz uma cópia profunda do IV atualizado
 
 # Chave AES de 16 bytes
 key = b'\x00\x01\x02\x03\x04\x05\x06\x07\x08\t\n\x0b\x0c\r\x0e\x0f'  # 16 bytes
@@ -121,13 +118,3 @@ iv_matrix = [
     [136, 153, 170, 187],
     [0, 0, 0, 0]
 ]
-
-# Número de rodadas (para AES-128, são 10 rodadas)
-rounds = 10
-
-blocos_preped = blocks_prep('toCipher.txt')
-
-gcm(blocos_preped, key, iv_matrix)
-
-tag = withTag.calculate_tag_from_file('RESULTADO_GCM.txt', key)
-print(f'Tag gerada: {tag:#034x}')  # Exibe a tag em formato hexadecimal de 128 bits

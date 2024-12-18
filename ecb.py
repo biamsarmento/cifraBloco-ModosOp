@@ -1,11 +1,11 @@
-import comboComRodada as aes
+import aes
 import imagem
 
-caminho_imagem_antes_txt = 'selfieAntes.txt'
-caminho_imagem_depois_txt = 'selfieDepois.txt'
-caminho_blocos_encrypted_txt = 'blocos_encrypt.txt'
-caminho_blocos_decrypted_txt = 'blocos_decrypt.txt'
-caminhoImagemRec = 'selfie_recuperada_ECB.jpeg'
+caminho_imagem_antes_txt = 'selfie_antes.txt'
+caminho_imagem_depois_txt = 'selfie_depois.txt'
+caminho_blocos_encrypted_txt = 'selfie_encrypt.txt'
+caminho_blocos_decrypted_txt = 'selfie_decrypt.txt'
+caminhoImagemRec = 'selfie_recuperada.jpeg'
 
 def blocks_prep(caminho_txt):
     # Lê a string hexadecimal do arquivo .txt
@@ -59,12 +59,12 @@ def ecb_cipher(blocks, key):
     
     return blocos_criptografados
 
-def ecb_decipher(caminho, key):
+def ecb_decipher(caminhoOr, caminhoDest, key):
     # Array para armazenar os resultados descriptografados
     blocos_descriptografados = []
 
     # Lê os blocos criptografados do arquivo
-    with open(caminho, 'r') as input_file:
+    with open(caminhoOr, 'r') as input_file:
         blocos_criptografados = input_file.read().splitlines()
     
     # Para cada bloco no arquivo, realiza a descriptografia
@@ -77,7 +77,7 @@ def ecb_decipher(caminho, key):
         blocos_descriptografados.append(aes.format_state_hex(descriptografado))
     
     # Salva os blocos descriptografados em um novo arquivo de texto
-    with open(caminho_blocos_decrypted_txt, 'w') as output_file:
+    with open(caminhoDest, 'w') as output_file:
         for bloco in blocos_descriptografados:
             output_file.write(bloco + '\n')
     
@@ -117,13 +117,12 @@ def main():
 
         caminho_selfie = input("\nInsira o caminho da imagem: ")
 
-        hex_string = imagem.imagem_para_hex('selfie.jpeg')
+        hex_string = imagem.imagem_para_hex(caminho_selfie)
         imagem.salvar_hex_em_txt(hex_string, caminho_imagem_antes_txt)
 
         blocos = blocks_prep(caminho_imagem_antes_txt)
         
         blocos_encrypted = ecb_cipher(blocos, resultadoChave)
-        print("Blocos criptografados: \n", blocos_encrypted)
         
         verImagem = input("\nDeseja ver a imagem? y para sim e n para não: ")
 
@@ -135,9 +134,9 @@ def main():
                 hex_string_lido = file.read()
             imagem.hex_para_imagem(hex_string_lido, 'selfie_original.jpeg')
             
-            blocosUnp = blocks_unprep(caminho_blocos_encrypted_txt, 'imagem_depois.txt')
+            blocosUnp = blocks_unprep(caminho_blocos_encrypted_txt, 'selfie_encrypt_processada.txt')
             
-            with open('imagem_depois.txt', 'r') as file:
+            with open('selfie_encrypt_processada.txt', 'r') as file:
                 hex_string_lido2 = file.read()
             imagem.hex_para_imagem(hex_string_lido2, 'selfie_cripto.jpeg')
         else:
@@ -156,13 +155,9 @@ def main():
         resultadoChave = aes.converter_para_bytes(chave)
         print("\nChave: ", resultadoChave)
 
-        blocos_decrypted = ecb_decipher(caminho_blocos_encrypted_txt, resultadoChave)
-
-        print("Blocos descriptografados: \n", blocos_decrypted)
+        blocos_decrypted = ecb_decipher(caminho_blocos_encrypted_txt, caminho_blocos_decrypted_txt, resultadoChave)
 
         blocos_unpreped = blocks_unprep(caminho_blocos_decrypted_txt, caminho_imagem_depois_txt)
-
-        print("\nResultado final:\n", blocos_unpreped)
 
         verImagem = input("\nDeseja ver o resultado da imagem? y para sim e n para não: ")
 
@@ -170,6 +165,7 @@ def main():
             with open(caminho_imagem_depois_txt, 'r') as file:
                 hex_string_lido = file.read()
             imagem.hex_para_imagem(hex_string_lido, caminhoImagemRec)
+            print(f"Imagem está em {caminhoImagemRec}")
         else:
             return
 

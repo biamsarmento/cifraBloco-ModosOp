@@ -1,5 +1,4 @@
-import numpy as np
-import comboComRodada as aes
+import aes
 
 def blocks_prep(caminho_txt):
     # Lê a string hexadecimal do arquivo .txt
@@ -51,8 +50,6 @@ def calculate_tag_from_file(filename, key):
     
     blocks_preped = blocks_prep(filename)
 
-    # print("Ciphertext Blocks: ", blocks_preped)
-
     # 4. Calcular o valor H (cifra de 128 bits do vetor de 0s com a chave)
     # O valor H é a cifra de 128 bits de um vetor de zeros, formatado como uma matriz 4x4
     h_block = [[0, 0, 0, 0],  # 4x4 matriz com zeros
@@ -94,9 +91,13 @@ def calculate_tag_from_file(filename, key):
     # 12. Retornar a tag de 128 bits (garantindo que tenha 16 bytes)
     return accumulator
 
-# Exemplo de uso:
-key = b'\x00\x01\x02\x03\x04\x05\x06\x07\x08\t\n\x0b\x0c\r\x0e\x0f'  # Chave AES de 16 bytes
+def verify_tag(ciphertext_filename, key, expected_tag):
+    """Verifica a tag e decifra o texto se a tag for válida"""
+    # Calcule a tag de autenticação a partir do ciphertext e do IV
+    tag = calculate_tag_from_file(ciphertext_filename, key)
 
-# Calcular a tag de autenticação para os dados cifrados do arquivo
-# tag = calculate_tag_from_file('RESULTADO_GCM.txt', key)
-# print(f'Tag gerada: {tag:#034x}')  # Exibe a tag em formato hexadecimal de 128 bits
+    # Verifique se a tag gerada corresponde à tag fornecida
+    if str(tag) == expected_tag:
+        return True
+    else:
+        return False

@@ -83,7 +83,6 @@ def sub_bytes(state):
 
     temp = state
 
-    print("Como o state chega em sub_bytes: ", temp)
     for i in range(4):
         for j in range(4):
             byte = temp[i][j]
@@ -273,7 +272,6 @@ def inv_sub_bytes(state):
     # Cria uma cópia profunda para evitar modificar o estado original.
     temp = [row[:] for row in state]
 
-    print("Como o state chega em inv_sub_bytes: ", temp)
     for i in range(4):
         for j in range(4):
             byte = temp[i][j]
