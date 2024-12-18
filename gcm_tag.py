@@ -50,26 +50,26 @@ def calculate_tag_from_file(filename, key):
     
     blocks_preped = blocks_prep(filename)
 
-    # 4. Calcular o valor H (cifra de 128 bits do vetor de 0s com a chave)
+    # Calcula o valor H (cifra de 128 bits do vetor de 0s com a chave)
     # O valor H é a cifra de 128 bits de um vetor de zeros, formatado como uma matriz 4x4
     h_block = [[0, 0, 0, 0],  # 4x4 matriz com zeros
                [0, 0, 0, 0],
                [0, 0, 0, 0],
                [0, 0, 0, 0]]
 
-    # 5. Cifra o h_block com a chave AES e as 10 rodadas
+    # Cifra o h_block com a chave AES e as 10 rodadas
     h = aes.aes_encrypt(h_block, key, 10)  # Usando a função aes.aes_encrypt
 
-    # 6. Converta 'h' (matriz de 4x4) em uma sequência contínua de bytes
+    # Converte 'h' (matriz de 4x4) em uma sequência contínua de bytes
     h_bytes = b''.join([bytes([elem for row in h for elem in row])])
 
-    # 7. Converte a sequência de bytes para um inteiro
+    # Converte a sequência de bytes para um inteiro
     h_int = int.from_bytes(h_bytes, byteorder='big')
 
-    # 8. Inicializa o acumulador (devemos garantir que ele tenha 128 bits)
+    # Inicializa o acumulador (devemos garantir que ele tenha 128 bits)
     accumulator = 0
 
-    # 9. Multiplicar no campo de Galois os blocos de ciphertext com o valor H
+    # Multiplica no campo de Galois os blocos de ciphertext com o valor H
     for block_hex in blocks_preped:
         # Converte o bloco de string hexadecimal para bytes
         block_bytes = bytes.fromhex(block_hex)
@@ -81,22 +81,22 @@ def calculate_tag_from_file(filename, key):
         accumulator = galois_multiply(accumulator, h_int)
         accumulator ^= block_int  # XOR com o bloco de texto cifrado
 
-    # 10. Incluir o tamanho do texto cifrado (em bits)
+    # Inclui o tamanho do texto cifrado (em bits)
     ciphertext_length = len(blocks_preped) * 8  # Tamanho em bits
     accumulator ^= ciphertext_length  # XOR com o comprimento do texto cifrado
 
-    # 11. Garantir que o acumulador tenha apenas 128 bits (16 bytes)
+    # Garante que o acumulador tenha apenas 128 bits (16 bytes)
     accumulator &= (1 << 128) - 1  # Máscara para manter os 128 bits mais baixos
 
-    # 12. Retornar a tag de 128 bits (garantindo que tenha 16 bytes)
+    # Retorna a tag de 128 bits (garantindo que tenha 16 bytes)
     return accumulator
 
 def verify_tag(ciphertext_filename, key, expected_tag):
     """Verifica a tag e decifra o texto se a tag for válida"""
-    # Calcule a tag de autenticação a partir do ciphertext e do IV
+    # Calcula a tag de autenticação a partir do ciphertext e do IV
     tag = calculate_tag_from_file(ciphertext_filename, key)
 
-    # Verifique se a tag gerada corresponde à tag fornecida
+    # Verifica se a tag gerada corresponde à tag fornecida
     if str(tag) == expected_tag:
         return True
     else:

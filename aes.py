@@ -107,7 +107,7 @@ def xtime(x):
 def mul3(x):
     return xtime(x) ^ x
 
-# Função de MixColumns (corrigida)
+# Função de MixColumns
 def mix_columns(state):
 
     temp = state
@@ -193,18 +193,11 @@ def aes_encrypt(text, key, rounds):
     afterAddRoundKey = 0
 
     round_keys = key_expansion(key, rounds)  # Corrige o formato das subchaves
-    # Testando se a saída corresponde ao esperado
-    # for i, rk in enumerate(round_keys):
-    #     print(f"Round Key {i}:", format_state_hex(rk))
-
-    # print("RoundKeys: ", round_keys)
 
     # Rodada inicial
-    # print("State inicial:", format_state_hex(state))
     firstAddRoundKey = add_round_key(state, round_keys[0])
-    # print("State 0 ", state)
 
-    # 9 rodadas intermediárias
+    # Rodadas intermediárias
     if rounds == 1:
         # print(f"round[0].start: {format_state_hex(firstAddRoundKey)}")
         afterSubBytes = sub_bytes(firstAddRoundKey)
@@ -416,7 +409,6 @@ def aes_decrypt(ciphertext, key, rounds):
     state = ciphertext
 
     # Etapa inicial: Adiciona a chave da última rodada
-    # print("State 0: ", format_state_hex(state))
     state = inv_add_round_key(state, round_keys[0])
 
     # Rodadas principais (Nr-1 rodadas)
@@ -462,17 +454,17 @@ def verificar_formato(text):
 
 def converter_para_bytes(matriz_hex):
 
-    # Criar uma lista para armazenar os valores inteiros
+    # Cria uma lista para armazenar os valores inteiros
     lista_bytes = []
 
-    # Dividir a string de entrada em valores hexadecimais, ignorando espaços extras
+    # Divide a string de entrada em valores hexadecimais, ignorando espaços extras
     valores_hex = matriz_hex.split()
 
-    # Iterar sobre os valores hexadecimais e convertê-los para inteiros
+    # Itera sobre os valores hexadecimais e converte para inteiros
     for item in valores_hex:
         lista_bytes.append(int(item, 16))
     
-    # Criar e retornar o objeto de bytes
+    # Cria e retorna o objeto de bytes
     return bytes(lista_bytes)
 
 def converter_para_decimais(text):

@@ -94,7 +94,6 @@ def gcm(blocos_preped, key, iv, dest_file, rounds=10):
 
         # Itera sobre os blocos
         for i, bloco in enumerate(blocos_preped):
-            # Realiza a operação XOR entre o bloco e o IV cifrado
 
             iv_plus_key = encrypt_iv_with_key(iv_temp, key, rounds)
             
@@ -107,14 +106,3 @@ def gcm(blocos_preped, key, iv, dest_file, rounds=10):
             iv = increment_iv(iv)  # Incrementa o IV antes de usá-lo novamente
 
             iv_temp = copy.deepcopy(iv)  # Faz uma cópia profunda do IV atualizado
-
-# Chave AES de 16 bytes
-key = b'\x00\x01\x02\x03\x04\x05\x06\x07\x08\t\n\x0b\x0c\r\x0e\x0f'  # 16 bytes
-
-# IV fixo em formato de matriz 4x4 de inteiros
-iv_matrix = [
-    [0, 17, 34, 51],
-    [68, 85, 102, 119],
-    [136, 153, 170, 187],
-    [0, 0, 0, 0]
-]
