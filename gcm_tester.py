@@ -33,7 +33,7 @@ def main():
     if choice == '1':
         tag = gcm_tag.calculate_tag_from_file(caminho_destino, resultado_chave)
         print("\nA sua tag é: ", tag)
-        print("Seu resultado está em: ", caminho_destino)
+        print("\nSeu resultado está em: ", caminho_destino)
 
     elif choice == '2':
         tag = input("\nInsira a Tag: ")

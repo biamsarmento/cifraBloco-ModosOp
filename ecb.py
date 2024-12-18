@@ -40,14 +40,14 @@ def blocks_prep(caminho_txt):
     
     return blocos_formatados
 
-def ecb_cipher(blocks, key):
+def ecb_cipher(blocks, key, rounds=10):
     # Array para armazenar os resultados criptografados
     blocos_criptografados = []
     
     # Para cada bloco na lista de blocos, criptografa com aes_encrypt
     for bloco in blocks:
         # Converte o bloco para decimais e criptografa com AES
-        criptografado = aes.aes_encrypt(aes.converter_para_decimais(bloco), key, 10)
+        criptografado = aes.aes_encrypt(aes.converter_para_decimais(bloco), key, rounds)
         
         # Formata o bloco criptografado como hexadecimal
         blocos_criptografados.append(aes.format_state_hex(criptografado))
@@ -59,7 +59,7 @@ def ecb_cipher(blocks, key):
     
     return blocos_criptografados
 
-def ecb_decipher(caminhoOr, caminhoDest, key):
+def ecb_decipher(caminhoOr, caminhoDest, key, rounds=10):
     # Array para armazenar os resultados descriptografados
     blocos_descriptografados = []
 
@@ -71,7 +71,7 @@ def ecb_decipher(caminhoOr, caminhoDest, key):
     for bloco_hex in blocos_criptografados:
         # Converte o bloco hexadecimal para decimais e descriptografa com AES
         bloco_decimais = aes.converter_para_decimais(bloco_hex)
-        descriptografado = aes.aes_decrypt(bloco_decimais, key, 10)
+        descriptografado = aes.aes_decrypt(bloco_decimais, key, rounds)
         
         # Converte o bloco descriptografado para hexadecimal
         blocos_descriptografados.append(aes.format_state_hex(descriptografado))
