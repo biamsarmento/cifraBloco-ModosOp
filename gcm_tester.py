@@ -38,9 +38,11 @@ def main():
     elif choice == '2':
         tag = input("\nInsira a Tag: ")
         if gcm_tag.verify_tag(caminho_origem, resultado_chave, tag):
-             print("Tag é válida!")
+            print("Tag é válida!")
         else:
+            print("Tag é inválida!")
             return
+
         print("Seu resultado está em: ", caminho_destino)
 
 

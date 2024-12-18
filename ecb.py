@@ -47,6 +47,7 @@ def ecb_cipher(blocks, key, rounds=10):
     # Para cada bloco na lista de blocos, criptografa com aes_encrypt
     for bloco in blocks:
         # Converte o bloco para decimais e criptografa com AES
+
         criptografado = aes.aes_encrypt(aes.converter_para_decimais(bloco), key, rounds)
         
         # Formata o bloco criptografado como hexadecimal
